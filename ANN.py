@@ -36,11 +36,21 @@ class ANN:
     def sigmoid_derivative(self, x):
         return x * (1 - x)
 
-    # Propogate forward through layers
+    ##
+    # forward
+    #
+    # Description: Propogates the input forward through the network.
+    #
+    # Parameters:
+    #   input - the input to the network
+    # 
+    # Return: The output of the network after passing through the network.
+    ##
     def forward(self, input):
         # Ensure 2D input for consistent matrix operations
         if isinstance(input, np.ndarray) and input.ndim == 1:
             input = input.reshape(1, -1)
+        
         # Hidden layer
         self.z1 = np.dot(input, self.w1) + self.b1
         self.a1 = self.sigmoid(self.z1)
@@ -51,18 +61,33 @@ class ANN:
 
         return self.a2
 
-    # Propogate backward through layers
+    ##
+    # backward
+    #
+    # Description: Propogates the error backward through the network.
+    #
+    # Parameters:
+    #   x_input - the input to the network
+    #   y_output - the desired output of the network
+    #
+    # Return: Nothing, updates weights and biases in itself.
+    ##
     def backward(self, x_input, y_output):
-
-        # Ensure 2D shapes for consistent math
+        # Ensure 2D input for consistent matrix operations
         if isinstance(x_input, np.ndarray) and x_input.ndim == 1:
             x_input = x_input.reshape(1, -1)
         if isinstance(y_output, np.ndarray) and y_output.ndim == 1:
             y_output = y_output.reshape(1, -1)
+
+        # Note: 
+        #   I divide by n to get the average gradient across the batch to make learning rate independent of batch size.
         n = x_input.shape[0]
         
         # Output layer error
-        error_output = y_output - self.a2
+        # Note: 
+        #   for this assignment, omitting the sigmoid derivative makes convergence ~10x faster.
+        #   I didn't have it in my original ML assignment, but I'll add it here for this assignment.
+        error_output = (y_output - self.a2) * self.sigmoid_derivative(self.a2)
 
         # Calculate weights and biases for output layer
         dw2 = np.dot(self.a1.T, error_output) / n
@@ -100,17 +125,18 @@ class ANN:
                 self.forward(batch_input)
                 self.backward(batch_input, batch_output)
             
-            # Calculate average accuracy over the full dataset
             output_pred = self.forward(x_input)
+
+            # Calculate accuracy over the full dataset (disabled for this assignment)
             # accuracy = np.mean(output_pred == y_output)
             # self.accuracy_per_epoch.append(accuracy)
-            # print(f"Epoch {epoch+1}, Accuracy: {accuracy:.4f}") # dont't do accuracy for now
+            # print(f"Epoch {epoch+1}, Accuracy: {accuracy:.4f}"
 
             # Calculate average error over dataset for this epoch
             error = np.mean(np.abs(output_pred - y_output))
             self.error_per_epoch.append(error)
 
-            if epoch % 50 == 0: # print every 50 epochs; wayyyy too much if every epoch
+            if epoch % 100 == 0: # print every 100 epochs; wayyyy too much if every epoch
                 print(f"Epoch {epoch}, Error: {error:.4f}")
 
             # Average error - if average errror is less than stop_threshold, stop training
@@ -143,7 +169,7 @@ examples = [
 input_size = 4
 output_size = 1
 hidden_size = 8
-alpha = 0.1
+alpha = 0.5
 batch_size = 10
 stop_threshold = 0.05
 

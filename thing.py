@@ -28,6 +28,7 @@ neural2 = [] # weights for public node (9: bias + 8 inputs from hidden) = 9
 
 n_input = []
 n_input2 = []
+deltas = []
 for i in range(8):
 	neural.append([
 		random.random()- 1, 
@@ -41,8 +42,8 @@ for i in range(9):
 
 def run_neural():
 	a = 0 
-	b = 0
-	c = 0
+	b = 1
+	c = 1
 	d = 0
 	ret = 0
 	error = 0
@@ -64,7 +65,7 @@ def run_neural():
 			sigmoid = sigmoid + n_input2[i] * neural2[i+1]
 		ret = 1.0 / (1.0 + math.exp(-sigmoid))
 		if (a + b + c + d < 5):
-			print("expected value for " + str(a) + " " + str(b) + " " + str(c) + " " + str(d) + ": " + str(ret))
+			#print("expected value for " + str(a) + " " + str(b) + " " + str(c) + " " + str(d) + ": " + str(ret))
 			print("error is: " + str(check(a, b, c, d) - ret) )
 		learn(n_input, n_input2, ret, sigmoid)
 
@@ -79,23 +80,26 @@ def learn(n_input, n_input2, actual, sigmoid):
 	global neural2
 	a = 0.1
 	error = check(n_input[0], n_input[1], n_input[2], n_input[3]) - actual # error value
+	d = actual * (1.0 - actual) * (error)
 	if math.isnan(actual): print(str(neural))
 	#wf = wi + 0.1 * err * g(x) * (1 - g(x)) * x
 	#output nodes: 
 	for i in range(len(neural2)):
-		if i > 0: neural2[i] = neural2[i] + 0.1 * error * actual * (1 - actual) * n_input2[i-1]
-		else: neural2[i] = neural2[i] + 0.1 * error * actual * (1 - actual) * 1
+		if i > 0: neural2[i] = neural2[i] + 0.1 * d * n_input2[i-1]
+		else: neural2[i] = neural2[i] + 0.1 * d * 1
 		pass
 	#hidden nodes: err is output * weight: neural2[i] * neural[i][j]
 	for i in range(len(neural)):
 		for j in range(len(neural[0])):
+			d2 = neural2[i+1] * d
 			if j > 0:
-				val = neural[i][j] + a * neural[i][j] * error * neural2[i+1] * (1 - neural2[i+1]) * n_input[j-1]
-				if not math.isnan(val) and not math.isinf(val): neural[i][j] = neural[i][j] + a * neural[i][j] * error * neural2[i+1] * (1 - neural2[i+1]) * n_input[j-1]
+				neural[i][j] = neural[i][j] + a * d2 * n_input[j-1]
+				#neural[i][j] = neural[i][j] + a * neural[i][j] * error * neural2[i+1] * (1 - neural2[i+1]) * n_input[j-1]
 			else: 
-				val = neural[i][j] + a * neural[i][j] * error * neural2[1+1] * (1 - neural2[i+1]) * 1
-				if not math.isnan(val) and not math.isinf(val): neural[i][j] = neural[i][j] + a * neural[i][j] * error * neural2[1+1] * (1 - neural2[i+1]) * 1
-	pass
+				neural[i][j] = neural[i][j] + a * d2 * 1
+				#neural[i][j] = neural[i][j] + a * neural[i][j] * error * neural2[1+1] * (1 - neural2[i+1]) * 1
+	return error
 
-for i in range(300):
+stop = 1
+for i in range(1000):
 	run_neural()

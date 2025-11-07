@@ -47,10 +47,6 @@ class ANN:
     # Return: The output of the network after passing through the network.
     ##
     def forward(self, input):
-        # Ensure 2D input for consistent matrix operations
-        if isinstance(input, np.ndarray) and input.ndim == 1:
-            input = input.reshape(1, -1)
-        
         # Hidden layer
         self.z1 = np.dot(input, self.w1) + self.b1
         self.a1 = self.sigmoid(self.z1)
@@ -73,20 +69,13 @@ class ANN:
     # Return: Nothing, updates weights and biases in itself.
     ##
     def backward(self, x_input, y_output):
-        # Ensure 2D input for consistent matrix operations
-        if isinstance(x_input, np.ndarray) and x_input.ndim == 1:
-            x_input = x_input.reshape(1, -1)
-        if isinstance(y_output, np.ndarray) and y_output.ndim == 1:
-            y_output = y_output.reshape(1, -1)
-
-        # Note: 
-        #   I divide by n to get the average gradient across the batch to make learning rate independent of batch size.
+        # I divide deltas by n to get the average gradient across the batch to make learning rate independent of batch size
         n = x_input.shape[0]
         
         # Output layer error
         # Note: 
         #   for this assignment, omitting the sigmoid derivative makes convergence ~10x faster.
-        #   I didn't have it in my original ML assignment, but I'll add it here for this assignment.
+        #   I'll keep it so that it's consistent with what we did in class. May remove for 5b.
         error_output = (y_output - self.a2) * self.sigmoid_derivative(self.a2)
 
         # Calculate weights and biases for output layer
@@ -136,10 +125,11 @@ class ANN:
             error = np.mean(np.abs(output_pred - y_output))
             self.error_per_epoch.append(error)
 
-            if epoch % 100 == 0: # print every 100 epochs; wayyyy too much if every epoch
+            # print every 100 epochs; wayyyy too many prints if every epoch
+            if epoch % 100 == 0: 
                 print(f"Epoch {epoch}, Error: {error:.4f}")
 
-            # Average error - if average errror is less than stop_threshold, stop training
+            # if average errror is less than stop threshold, stop training
             if error < self.stop_threshold:
                 print(f"Training stopped at epoch {epoch+1} at an error of {error:.4f} because average error is less than stop threshold of {self.stop_threshold:.4f}")
 
@@ -165,7 +155,6 @@ examples = [
 ]
 
 # Create an ANN
-
 input_size = 4
 output_size = 1
 hidden_size = 8
